@@ -5,7 +5,7 @@ model_cfg = dict(
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
-        num_classes=1000,
+        num_classes=9,
         in_channels=2048,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
         topk=(1, 5),
@@ -17,10 +17,10 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
-        type='RandomResizedCrop',
+        type='Resize',
         size=456,
-        efficientnet_style=True,
-        interpolation='bicubic'),
+        interpolation='bilinear'),
+    dict(type='RandomGrayscale'),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
@@ -30,10 +30,9 @@ train_pipeline = [
 val_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
-        type='CenterCrop',
+        type='Resize',
         crop_size=456,
-        efficientnet_style=True,
-        interpolation='bicubic'),
+        interpolation='bilinear'),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='Collect', keys=['img'])
@@ -41,7 +40,7 @@ val_pipeline = [
 
 # train
 data_cfg = dict(
-    batch_size = 32,
+    batch_size = 6,
     num_workers = 4,
     train = dict(
         pretrained_flag = False,
@@ -51,7 +50,7 @@ data_cfg = dict(
         epoches = 100,
     ),
     test=dict(
-        ckpt = '',
+        ckpt = './logs/EfficientNet/2023-02-20-08-00-58/Val_Epoch097-Acc95.778.pth',
         metrics = ['accuracy', 'precision', 'recall', 'f1_score', 'confusion'],
         metric_options = dict(
             topk = (1,5),
@@ -66,7 +65,7 @@ data_cfg = dict(
 # optimizer
 optimizer_cfg = dict(
     type='SGD',
-    lr=0.1 * 32/256,
+    lr=0.1 * 6/256,
     momentum=0.9,
     weight_decay=1e-4)
 

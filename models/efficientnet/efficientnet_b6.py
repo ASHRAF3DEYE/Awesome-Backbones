@@ -5,11 +5,106 @@ model_cfg = dict(
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
-        num_classes=1000,
+        num_classes=9,
         in_channels=2304,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
         topk=(1, 5),
         ))
+
+policies = [
+    [
+        dict(type='Posterize', bits=4, prob=0.4),
+        dict(type='Rotate', angle=30., prob=0.6)
+    ],
+    [
+        dict(type='Solarize', thr=256 / 9 * 4, prob=0.6),
+        dict(type='AutoContrast', prob=0.6)
+    ],
+    [dict(type='Equalize', prob=0.8),
+     dict(type='Equalize', prob=0.6)],
+    [
+        dict(type='Posterize', bits=5, prob=0.6),
+        dict(type='Posterize', bits=5, prob=0.6)
+    ],
+    [
+        dict(type='Equalize', prob=0.4),
+        dict(type='Solarize', thr=256 / 9 * 5, prob=0.2)
+    ],
+    [
+        dict(type='Equalize', prob=0.4),
+        dict(type='Rotate', angle=30 / 9 * 8, prob=0.8)
+    ],
+    [
+        dict(type='Solarize', thr=256 / 9 * 6, prob=0.6),
+        dict(type='Equalize', prob=0.6)
+    ],
+    [dict(type='Posterize', bits=6, prob=0.8),
+     dict(type='Equalize', prob=1.)],
+    [
+        dict(type='Rotate', angle=10., prob=0.2),
+        dict(type='Solarize', thr=256 / 9, prob=0.6)
+    ],
+    [
+        dict(type='Equalize', prob=0.6),
+        dict(type='Posterize', bits=5, prob=0.4)
+    ],
+    [
+        dict(type='Rotate', angle=30 / 9 * 8, prob=0.8),
+        dict(type='ColorTransform', magnitude=0., prob=0.4)
+    ],
+    [
+        dict(type='Rotate', angle=30., prob=0.4),
+        dict(type='Equalize', prob=0.6)
+    ],
+    [dict(type='Equalize', prob=0.0),
+     dict(type='Equalize', prob=0.8)],
+    [dict(type='Invert', prob=0.6),
+     dict(type='Equalize', prob=1.)],
+    [
+        dict(type='ColorTransform', magnitude=0.4, prob=0.6),
+        dict(type='Contrast', magnitude=0.8, prob=1.)
+    ],
+    [
+        dict(type='Rotate', angle=30 / 9 * 8, prob=0.8),
+        dict(type='ColorTransform', magnitude=0.2, prob=1.)
+    ],
+    [
+        dict(type='ColorTransform', magnitude=0.8, prob=0.8),
+        dict(type='Solarize', thr=256 / 9 * 2, prob=0.8)
+    ],
+    [
+        dict(type='Sharpness', magnitude=0.7, prob=0.4),
+        dict(type='Invert', prob=0.6)
+    ],
+    [
+        dict(
+            type='Shear',
+            magnitude=0.3 / 9 * 5,
+            prob=0.6,
+            direction='horizontal'),
+        dict(type='Equalize', prob=1.)
+    ],
+    [
+        dict(type='ColorTransform', magnitude=0., prob=0.4),
+        dict(type='Equalize', prob=0.6)
+    ],
+    [
+        dict(type='Equalize', prob=0.4),
+        dict(type='Solarize', thr=256 / 9 * 5, prob=0.2)
+    ],
+    [
+        dict(type='Solarize', thr=256 / 9 * 4, prob=0.6),
+        dict(type='AutoContrast', prob=0.6)
+    ],
+    [dict(type='Invert', prob=0.6),
+     dict(type='Equalize', prob=1.)],
+    [
+        dict(type='ColorTransform', magnitude=0.4, prob=0.6),
+        dict(type='Contrast', magnitude=0.8, prob=1.)
+    ],
+    [dict(type='Equalize', prob=0.8),
+     dict(type='Equalize', prob=0.6)],
+]
 
 # dataloader pipeline
 img_norm_cfg = dict(
@@ -17,10 +112,11 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
-        type='RandomResizedCrop',
+        type='Resize',
         size=528,
-        efficientnet_style=True,
-        interpolation='bicubic'),
+        interpolation='bilinear'),
+    dict(type='AutoAugment', policies=policies),
+    dict(type='RandomGrayscale'),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
@@ -30,10 +126,9 @@ train_pipeline = [
 val_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
-        type='CenterCrop',
+        type='Resize',
         crop_size=528,
-        efficientnet_style=True,
-        interpolation='bicubic'),
+        interpolation='bilinear'),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='Collect', keys=['img'])
@@ -41,7 +136,7 @@ val_pipeline = [
 
 # train
 data_cfg = dict(
-    batch_size = 32,
+    batch_size = 4,
     num_workers = 4,
     train = dict(
         pretrained_flag = False,
@@ -51,7 +146,7 @@ data_cfg = dict(
         epoches = 100,
     ),
     test=dict(
-        ckpt = '',
+        ckpt = './logs/EfficientNet/2023-02-27-15-13-06/Val_Epoch058-Acc98.889.pth',
         metrics = ['accuracy', 'precision', 'recall', 'f1_score', 'confusion'],
         metric_options = dict(
             topk = (1,5),
@@ -61,12 +156,12 @@ data_cfg = dict(
     )
 )
 
-# batch 32
-# lr = 0.1 *32 /256
+# batch 4
+# lr = 0.1 *8 /256
 # optimizer
 optimizer_cfg = dict(
     type='SGD',
-    lr=0.1 * 32/256,
+    lr=0.1 * 4/256,
     momentum=0.9,
     weight_decay=1e-4)
 
