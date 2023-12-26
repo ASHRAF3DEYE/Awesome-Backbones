@@ -17,16 +17,16 @@ def main():
     parser.add_argument(
         '--classes-map', default='datas/annotations.txt', help='classes map of datasets')
     parser.add_argument(
-        '--device', default='cuda', help='Device used for inference')
+        '--device', default='cpu', help='Device used for inference')
     parser.add_argument(
         '--save-path',
         help='The path to save prediction image, default not to save.')
     parser.add_argument('--show', action='store_true', help='Show video')
     args = parser.parse_args()
 
-    classes_names, _ = get_info(args.classes_map)
+    classes_names,label_names = get_info(args.classes_map)
     # build the model from a config file and a checkpoint file
-    model_cfg,train_pipeline,val_pipeline,data_cfg,lr_config,optimizer_cfg = file2dict(args.config)
+    model_cfg, train_pipeline, val_pipeline,data_cfg, lr_config, optimizer_cfg = file2dict(args.config)
     if args.device is not None:
         device = torch.device(args.device)
     else:
@@ -49,7 +49,7 @@ def main():
         if not flag:
             break
         # get single test results
-        result = inference_model(model, frame, val_pipeline, classes_names)
+        result = inference_model(model, frame, val_pipeline, classes_names,label_names)
         # put the results to img
         img = imshow_infos(frame, result,show = False)
 
