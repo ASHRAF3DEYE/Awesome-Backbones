@@ -13,8 +13,7 @@ Awesome backbones for image classification
 
 </div>
 
-## 写在前面
-- 若训练效果不佳，首先需要调整学习率和Batch size，这俩超参很大程度上影响收敛。其次，从关闭图像增强手段（尤其小数据集）开始，有的图像增强方法会污染数据，如
+
 
 ![](https://raw.githubusercontent.com/Fafa-DL/readme-data/main/backbones/fail01.jpg) ![](https://raw.githubusercontent.com/Fafa-DL/readme-data/main/backbones/fail02.jpg) ![](https://raw.githubusercontent.com/Fafa-DL/readme-data/main/backbones/fail03.jpg)
 
